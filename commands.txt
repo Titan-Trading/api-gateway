@@ -1,2 +1,5 @@
 kafka-topics --alter --bootstrap-server localhost:29092 --topic simple-trader-api-outbound --partitions 10
 kafka-topics --create --bootstrap-server localhost:29092 --topic service-registry --replication-factor 1 --partitions 10
+
+certonly --webroot --webroot-path=/var/www/html --email ryan.m.coble@gmail.com --agree-tos --no-eff-email -d api-simpletrader.com
+certonly --standalone --preferred-challenges http -d api-simpletrader.com

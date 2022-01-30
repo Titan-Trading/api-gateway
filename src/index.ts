@@ -74,6 +74,10 @@ messageBus.onMessage(serviceRegistryTopic, async (data) => {
         // update route mapping repository
         const updated = services.update(data.serviceId, data.serviceId, data.supportedCommunicationChannels, data.hostname, data.port, data.endpoints, data.instances);
         if(updated && data.serviceId != serviceId) {
+            if(!data.supportedCommunicationChannels || !data.supportedCommunicationChannels.includes('bus')) {
+                return;
+            }
+
             await messageBus.subscribeToTopic(data.serviceId);
 
             await messageBus.onMessage(data.serviceId, servicesOutboundCallback);
@@ -101,6 +105,10 @@ messageBus.onMessage(serviceRegistryTopic, async (data) => {
     
             const updated = services.update(service.id, service.name, service.supportedCommunicationChannels, service.hostname, service.port, service.endpoints, service.instances);
             if(updated && service.name != serviceId) {
+                if(!service.supportedCommunicationChannels || !service.supportedCommunicationChannels.includes('bus')) {
+                    return;
+                }
+
                 await messageBus.subscribeToTopic(service.name);
     
                 await messageBus.onMessage(service.name, servicesOutboundCallback);
@@ -120,7 +128,7 @@ messageBus.connect().then(async () => {
         serviceId,
         supportedCommunicationChannels: ['bus'],
         hostname: 'gateway-proxy',
-        port: 8080,
+        port: 80,
         endpoints: []
     });
 

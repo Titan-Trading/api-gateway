@@ -1,0 +1,12 @@
+authtoken: 7vsDup2w7YhTgMZZ4UyHG_4Z3iPggU6bhFZz6bH65Br
+region: us
+
+tunnels:
+    api:
+        proto: http
+        addr: 80
+        subdomain: api-simpletrader
+    api-ssl:
+        proto: http
+        addr: 443
+        subdomain: api-simpletrader
