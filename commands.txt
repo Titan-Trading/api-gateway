@@ -1,0 +1,2 @@
+kafka-topics --alter --bootstrap-server localhost:29092 --topic simple-trader-api-outbound --partitions 10
+kafka-topics --create --bootstrap-server localhost:29092 --topic service-registry --replication-factor 1 --partitions 10
