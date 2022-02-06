@@ -22,18 +22,18 @@ export default class HttpServer
 
     start(port)
     {
-        // start http server on a given port
-        this.app.listen(port);
-
         // setup global request listener
         this.app.use((req, res) => {
-            this._onRequest(req, res);
+            return this._onRequest(req, res);
         });
+
+        // start http server on a given port
+        this.app.listen(port);
     }
 
     stop()
     {
-
+        this.app.close();
     }
 
     onRequest(callback)

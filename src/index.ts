@@ -55,7 +55,7 @@ function servicesOutboundCallback(data) {
         pendingRequests.remove(data.requestId);
 
         // send the response
-        return res.status(data.responseCode || 200).json(data.response || {});
+        return res.status(data.responseCode || 400).json(data.response || {});
     }
     catch(ex)
     {
@@ -65,10 +65,8 @@ function servicesOutboundCallback(data) {
 
 // when service registry is has responses
 messageBus.onMessage(serviceRegistryTopic, async (data) => {
-
     // service came online
     if(data.messageType == 'EVENT' && data.eventId == 'SERVICE_ONLINE') {
-        
         console.log('service online: ' + data.serviceId + ' (' + data.instanceId + ')');
 
         // update route mapping repository
@@ -85,7 +83,6 @@ messageBus.onMessage(serviceRegistryTopic, async (data) => {
     }
     // service went offline
     else if(data.messageType == 'EVENT' && data.eventId == 'SERVICE_OFFLINE') {
-
         console.log('service offline: ' + data.serviceId + ' (' + data.instanceId + ')');
 
         // update route mapping repository
@@ -119,7 +116,6 @@ messageBus.onMessage(serviceRegistryTopic, async (data) => {
 
 // connect to message bus
 messageBus.connect().then(async () => {
-
     console.log('connected to message bus');
 
     // let the service registry know that a new micro-service is online
@@ -138,63 +134,68 @@ messageBus.connect().then(async () => {
 
 // when a request is sent to the HTTP server
 restServer.onRequest(async (req, res) => {
-    const method = req.method.toLowerCase();
-    const url = req.path;
+    try {
+        const method = req.method.toLowerCase();
+        const url = req.path;
 
-    // string to identify a route
-    const routeId = method + '-' + url;
+        // string to identify a route
+        const routeId = method + '-' + url;
 
-    // string to identify the current request
-    const requestId = routeId + '.' + uuidv4();
+        // string to identify the current request
+        const requestId = routeId + '.' + uuidv4();
 
-    // check for a mapping in mapping repository
-    const service = services.getByRequest(method, url);
-    if(!service) {
-        return res.status(404).send('Not found');
-    }
-
-    console.log('Service found:', service.name);
-
-    // check if request should be authenticated based on mapping schema
-    // authenticate request using given pattern
-
-    // start the timeout response timer (if no service responds)
-    let requestTimeout = setTimeout(() => {
-        return res.status(504).send('Timed out');
-    }, 1000 * 10); // 10 seconds
-
-    // send http request or message bus message
-    if(service.supportedCommunicationChannels.includes('bus')) {
-        // add to pending requests repository
-        const pendingRequestAdded = pendingRequests.add(requestId, {
-            request: req,
-            requestTimeout,
-            responseCallback: res
-        });
-
-        if(pendingRequestAdded) {
-            messageBus.sendRequest(service.name, routeId, requestId, {
-                gatewayId: instanceId,
-                method,
-                endpoint: url,
-                data: req.body
-            });
-        }
-    }
-    else if(service.supportedCommunicationChannels.includes('rest')) {
-        const requestHeaders = req.headers;
-        const requestBody = req.body ? req.body : null;
-
-        const proxiedRes = await restProxy.sendRequest(method, service.hostname + ':' + service.port + url, requestBody, requestHeaders);
-
-        // clear the timeout for the current incoming request
-        clearTimeout(requestTimeout);
-
-        if(!proxiedRes) {
+        // check for a mapping in mapping repository
+        const service = services.getByRequest(method, url);
+        if(!service) {
             return res.status(404).send('Not found');
         }
 
-        return res.status(proxiedRes.statusCode).json(proxiedRes.body);
+        console.log('Service found:', service.name);
+
+        // check if request should be authenticated based on mapping schema
+        // authenticate request using given pattern
+
+        // start the timeout response timer (if no service responds)
+        let requestTimeout = setTimeout(() => {
+            return res.status(504).send('Timed out');
+        }, 1000 * 10); // 10 seconds
+
+        // send http request or message bus message
+        if(service.supportedCommunicationChannels.includes('bus')) {
+            // add to pending requests repository
+            const pendingRequestAdded = pendingRequests.add(requestId, {
+                request: req,
+                requestTimeout,
+                responseCallback: res
+            });
+
+            if(pendingRequestAdded) {
+                messageBus.sendRequest(service.name, routeId, requestId, {
+                    gatewayId: instanceId,
+                    method,
+                    endpoint: url,
+                    data: req.body
+                });
+            }
+        }
+        else if(service.supportedCommunicationChannels.includes('rest')) {
+            const requestHeaders = req.headers;
+            const requestBody = req.body ? req.body : null;
+
+            const proxiedRes = await restProxy.sendRequest(method, service.hostname + ':' + service.port + url, requestBody, requestHeaders);
+
+            // clear the timeout for the current incoming request
+            clearTimeout(requestTimeout);
+
+            if(!proxiedRes) {
+                return res.status(404).send('Not found');
+            }
+
+            return res.status(proxiedRes.statusCode).json(proxiedRes.body);
+        }
+    }
+    catch(e) {
+        console.log(e);
     }
 });
 
