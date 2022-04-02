@@ -11,13 +11,36 @@ export default class HttpServer
     {
         this.app = express();
 
+        /**
+         * Middleware
+         */
+
+        // CORS
         this.app.use(cors({
-            origin: "https://simpletrader.local",
+            origin: "https://simpletrader.local, https://api.simpletrader.local",
             methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'],
             allowedHeaders: '*',
             exposedHeaders: ['Content-Type', 'Origin']
         }));
+        // body parser (json api)
         this.app.use(bodyParser.json());
+        // improve stack-trace for weird request errors
+        this.app.use((req, res, next) => {
+            const render = res.render;
+            const send = res.send;
+            res.render = function renderWrapper(...args) {
+                Error.captureStackTrace(this);
+                return render.apply(this, args);
+            };
+            res.send = function sendWrapper(...args) {
+                try {
+                    send.apply(this, args);
+                } catch (err) {
+                    console.error(`Error in res.send | ${err.code} | ${err.message} | ${res.stack}`);
+                }
+            };
+            next();
+        });
     }
 
     start(port)
