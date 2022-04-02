@@ -17,7 +17,7 @@ export default class HttpServer
 
         // CORS
         this.app.use(cors({
-            origin: "https://simpletrader.local, https://api.simpletrader.local",
+            origin: "https://simpletrader.local",
             methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'],
             allowedHeaders: '*',
             exposedHeaders: ['Content-Type', 'Origin']
