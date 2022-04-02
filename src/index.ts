@@ -20,6 +20,7 @@ import HttpServer from './HttpServer';
 import PendingRequestRepository from './repositories/PendingRequestRepository';
 import ServiceRepository from './repositories/ServiceRepository';
 import RestProxy from './RestProxy';
+import { pluck } from './helpers';
 
 const messageBus = new MessageBus(process.env.CLIENT_ID, process.env.GROUP_ID, [process.env.KAFKA_BOOTSTRAP_SERVER]);
 const restServer = new HttpServer();
@@ -31,6 +32,7 @@ const services = new ServiceRepository();
 const serviceId = process.env.SERVICE_ID;
 const instanceId = process.env.INSTANCE_ID;
 const serviceRegistryTopic = 'service-registry';
+let requestTimeoutLimit: number = parseInt(process.env.REQUEST_TIMEOUT);
 
 // when a micro-service creates a response message
 function servicesOutboundCallback(data) {
@@ -125,7 +127,8 @@ messageBus.connect().then(async () => {
         supportedCommunicationChannels: ['bus'],
         hostname: 'gateway-proxy',
         port: 80,
-        endpoints: []
+        endpoints: [],
+        commands: []
     });
 
     // setup mapping endpoints to inbound event channel repository
@@ -157,11 +160,15 @@ restServer.onRequest(async (req, res) => {
 
         // start the timeout response timer (if no service responds)
         let requestTimeout = setTimeout(() => {
+            clearTimeout(requestTimeout);
+            requestTimeout = null;
+
             return res.status(504).send('Timed out');
-        }, 1000 * 10); // 10 seconds
+        }, requestTimeoutLimit); // 30 seconds
 
         // send http request or message bus message
         if(service.supportedCommunicationChannels.includes('bus')) {
+
             // add to pending requests repository
             const pendingRequestAdded = pendingRequests.add(requestId, {
                 request: req,
@@ -170,7 +177,7 @@ restServer.onRequest(async (req, res) => {
             });
 
             if(pendingRequestAdded) {
-                messageBus.sendRequest(service.name, routeId, requestId, {
+                await messageBus.sendRequest(service.name, routeId, requestId, {
                     gatewayId: instanceId,
                     method,
                     endpoint: url,
@@ -179,14 +186,17 @@ restServer.onRequest(async (req, res) => {
             }
         }
         else if(service.supportedCommunicationChannels.includes('rest')) {
-            const requestHeaders = req.headers;
+            const requestHeaders = pluck(['content-type', 'user-agent', 'x-auth-token', 'st-api-key', 'st-api-signature', 'st-api-timestamp'], req.headers);
             const requestBody = req.body ? req.body : null;
 
-            const proxiedRes = await restProxy.sendRequest(method, service.hostname + ':' + service.port + url, requestBody, requestHeaders);
+            //TODO: on main request timeout, cancel proxied request
+            const proxiedRes = await restProxy.sendRequest(method, 'http://' + service.hostname + ':' + service.port + url, requestBody, requestHeaders);
 
             // clear the timeout for the current incoming request
             clearTimeout(requestTimeout);
+            requestTimeout = null;
 
+            // greater than 300 (redirects and server errors)
             if(!proxiedRes) {
                 return res.status(404).send('Not found');
             }
@@ -196,6 +206,8 @@ restServer.onRequest(async (req, res) => {
     }
     catch(e) {
         console.log(e);
+
+        return res.status(500).send(e.getMessage());
     }
 });
 
