@@ -22,8 +22,10 @@ export default class HttpServer
             allowedHeaders: '*',
             exposedHeaders: ['Content-Type', 'Origin']
         }));
+
         // body parser (json api)
         this.app.use(bodyParser.json());
+        
         // improve stack-trace for weird request errors
         this.app.use((req, res, next) => {
             const render = res.render;
