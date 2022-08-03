@@ -72,7 +72,7 @@ messageBus.onMessage(serviceRegistryTopic, async (data) => {
         console.log('service online: ' + data.serviceId + ' (' + data.instanceId + ')');
 
         // update route mapping repository
-        const updated = services.update(data.serviceId, data.serviceId, data.supportedCommunicationChannels, data.hostname, data.port, data.endpoints, data.instances);
+        const updated = services.update(data.serviceId, data.serviceId, data.supportedCommunicationChannels, data.hostname, data.port, data.endpoints, data.commands, data.instances);
         if(updated && data.serviceId != serviceId) {
             if(!data.supportedCommunicationChannels || !data.supportedCommunicationChannels.includes('bus')) {
                 return;
@@ -102,7 +102,7 @@ messageBus.onMessage(serviceRegistryTopic, async (data) => {
         for(let sI in data.response) {
             const service = data.response[sI];
     
-            const updated = services.update(service.id, service.name, service.supportedCommunicationChannels, service.hostname, service.port, service.endpoints, service.instances);
+            const updated = services.update(service.id, service.name, service.supportedCommunicationChannels, service.hostname, service.port, service.endpoints, service.commands, service.instances);
             if(updated && service.name != serviceId) {
                 if(!service.supportedCommunicationChannels || !service.supportedCommunicationChannels.includes('bus')) {
                     return;

@@ -48,7 +48,7 @@ export default class ServiceRepository
         }
     }
 
-    update(id, name, supportedCommunicationChannels, hostname, port, endpoints, instances)
+    update(id, name, supportedCommunicationChannels, hostname, port, endpoints, commands, instances)
     {
         if(typeof this.services[id] === 'undefined') {
             this.services[id] = {};
@@ -61,6 +61,7 @@ export default class ServiceRepository
             hostname,
             port,
             endpoints,
+            commands,
             instances
         };
 

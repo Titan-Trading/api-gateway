@@ -17,5 +17,7 @@
             ]
         }
     },
-    "include": ["src/**/*", "src/index.js"]
+    "include": [
+        "src/**/*"
+    ]
 }

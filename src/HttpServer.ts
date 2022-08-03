@@ -17,10 +17,10 @@ export default class HttpServer
 
         // CORS
         this.app.use(cors({
-            origin: "https://simpletrader.local",
+            origin: ["https://simpletrader.local", 'http://localhost:3000'],
             methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'],
             allowedHeaders: '*',
-            exposedHeaders: ['Content-Type', 'Origin']
+            exposedHeaders: ['Content-Type', 'X-Auth-Token', 'Origin']
         }));
 
         // body parser (json api)
