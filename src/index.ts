@@ -108,6 +108,8 @@ messageBus.onMessage(serviceRegistryTopic, async (data) => {
                     return;
                 }
 
+                console.log('service updated: ' + data.serviceId);
+
                 await messageBus.subscribeToTopic(service.name);
     
                 await messageBus.onMessage(service.name, servicesOutboundCallback);
@@ -150,7 +152,9 @@ restServer.onRequest(async (req, res) => {
         // check for a mapping in mapping repository
         const service = services.getByRequest(method, url);
         if(!service) {
-            return res.status(404).send('Not found');
+            return res.status(404).json({
+                message: 'Not found'
+            });
         }
 
         console.log('Service found:', service.name);
@@ -163,7 +167,9 @@ restServer.onRequest(async (req, res) => {
             clearTimeout(requestTimeout);
             requestTimeout = null;
 
-            return res.status(504).send('Timed out');
+            return res.status(504).json({
+                message: 'Timed out'
+            });
         }, requestTimeoutLimit); // 30 seconds
 
         // send http request or message bus message
@@ -198,7 +204,9 @@ restServer.onRequest(async (req, res) => {
 
             // greater than 300 (redirects and server errors)
             if(!proxiedRes) {
-                return res.status(404).send('Not found');
+                return res.status(404).json({
+                    message: 'Not found'
+                });
             }
 
             return res.status(proxiedRes.statusCode).json(proxiedRes.body);
@@ -207,7 +215,9 @@ restServer.onRequest(async (req, res) => {
     catch(e) {
         console.log(e);
 
-        return res.status(500).send(e.getMessage());
+        return res.status(500).json({
+            message: 'Unknown server error'
+        });
     }
 });
 
