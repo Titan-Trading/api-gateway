@@ -2,7 +2,7 @@
 
 export default class PendingRequestRepository
 {
-    pendingRequests = {};
+    private pendingRequests = {};
 
     constructor()
     {
@@ -27,6 +27,15 @@ export default class PendingRequestRepository
         }
 
         return this.pendingRequests[requestId];
+    }
+
+    updateSent(requestId, isSent)
+    {
+        const pendingRequest = this.get(requestId);
+
+        pendingRequest.sent = isSent;
+
+        this.pendingRequests[requestId] = pendingRequest;
     }
 
     remove(requestId)

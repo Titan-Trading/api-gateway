@@ -12,7 +12,7 @@ services:
     build:
       context: ./
       dockerfile:  Dockerfile
-    # restart: unless-stopped
+    restart: always
     hostname: gateway-1
     container_name: gateway-1
     tty: true
@@ -24,12 +24,12 @@ services:
     #   - "9001:9001"
     command:
       - yarn
-      - start-dev
+      - start
   gateway-2:
     build:
       context: ./
       dockerfile:  Dockerfile
-    # restart: unless-stopped
+    restart: always
     hostname: gateway-2
     container_name: gateway-2
     tty: true
@@ -39,7 +39,7 @@ services:
       - app:/var/www/html
     command:
       - yarn
-      - start-dev
+      - start
   gateway-proxy:
     image: nginx:alpine
     container_name: gateway-proxy
