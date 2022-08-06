@@ -65,7 +65,7 @@ export default class ServiceRepository
             instances
         };
 
-        console.log('add or update service endpoints', this.services[id]);
+        // console.log('add or update service endpoints', this.services[id]);
 
         return true;
     }
@@ -83,7 +83,7 @@ export default class ServiceRepository
 
         this.services = newServices;
 
-        console.log('endpoints removed: ', this.services);
+        // console.log('endpoints removed: ', this.services);
 
         return true;
     }
