@@ -61,7 +61,7 @@ export default class System
                         serviceId:  process.env.SERVICE_ID,
                         supportedCommunicationChannels: ['bus'],
                         hostname: 'gateway-proxy',
-                        port: 80,
+                        port: 8000,
                         endpoints: [],
                         commands:  []
                     });
