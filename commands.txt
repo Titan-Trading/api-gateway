@@ -6,5 +6,5 @@ kafka-topics --alter --bootstrap-server localhost:29092 --topic socket-gateway -
 kafka-topics --delete --bootstrap-server localhost:29092 --topic exchange-account
 kafka-topics --create --bootstrap-server localhost:29092 --topic exchange-accounts --replication-factor 1 --partitions 10
 
-certonly --webroot --webroot-path=/var/www/html --email ryan.m.coble@gmail.com --agree-tos --no-eff-email -d api-simpletrader.com
+certonly --webroot --webroot-path=/var/www/html --email ryan.m.coble@gmail.com --agree-tos --no-eff-email -d api.tradingsystemstest.com
 certonly --standalone --preferred-challenges http -d api-simpletrader.com
