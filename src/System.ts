@@ -105,6 +105,8 @@ export default class System
                         if(typeof message.response === 'undefined') {
                             return;
                         }
+
+                        console.log('System: ' + message.response.length + ' services found');
                     
                         for(let sI in message.response) {
                             const service = message.response[sI];

@@ -19,7 +19,7 @@ system.start().then((isStarted) => {
 /**
  * Closed on error/generic
  */
- process.on('SIGTERM', async () => {
+process.on('SIGTERM', async () => {
     console.info('SIGTERM signal received.');
 
     console.log('System error: stopping...');
