@@ -272,8 +272,8 @@ export default class System
                  * Start http/rest server
                  */
                 if(process.env.REST_SERVER !== 'false') {
-                    // console.log('System: starting http server');
-                    context._log.info(`System: starting http server`);
+                    console.log('System: starting http server');
+                    // context._log.info(`System: starting http server`);
 
                     context._restServer.start(process.env.REST_PORT);
                 }
@@ -281,20 +281,20 @@ export default class System
                 resolve(true);
             }
             catch(err) {
-                // console.log('System error: ', err);
-                context._log.info(`System error: ${JSON.stringify(err)}`)
+                console.log('System error: ', err);
+                // context._log.info(`System error: ${JSON.stringify(err)}`)
                 
-                // console.log('System: wait 10 seconds before reconnecting...');
-                context._log.info(`System: wait 10 seconds before reconnecting...`);
+                console.log('System: wait 10 seconds before reconnecting...');
+                // context._log.info(`System: wait 10 seconds before reconnecting...`);
                 await sleep(10 * 1000);
 
-                // console.log('System: reconnecting to message bus...');
-                context._log.info(`System: reconnecting to message bus...`);
+                console.log('System: reconnecting to message bus...');
+                // context._log.info(`System: reconnecting to message bus...`);
                 context._messageBus.disconnect();
                 context._messageBus.connect();
 
-                // console.log('System: starting http server...');
-                context._log.info(`System: starting http server...`);
+                console.log('System: starting http server...');
+                // context._log.info(`System: starting http server...`);
                 context._restServer.stop();
                 context._restServer.start(process.env.REST_PORT);
 
@@ -316,22 +316,22 @@ export default class System
         try {
             if(process.env.MESSAGE_BUS !== 'false') {
                 // let the service registry know that a micro-service is offline
-                // console.log('System: updating service registry (SERVICE_OFFLINE)...');
-                context._log.info(`System: updating service registry (SERVICE_OFFLINE)...`);
+                console.log('System: updating service registry (SERVICE_OFFLINE)...');
+                // context._log.info(`System: updating service registry (SERVICE_OFFLINE)...`);
                 await context._messageBus.sendEvent('service-registry', 'SERVICE_OFFLINE', {
                     instanceId: process.env.INSTANCE_ID,
                     serviceId:  process.env.SERVICE_ID
                 });
-                // console.log('System: service registry updated');
-                context._log.info(`System: service registry updated`);
+                console.log('System: service registry updated');
+                // context._log.info(`System: service registry updated`);
             }
 
             if(process.env.MESSAGE_BUS !== 'false') {
-                // console.log('System: stopping http server...');
-                context._log.info(`System: stopping http server...`);
+                console.log('System: stopping http server...');
+                // context._log.info(`System: stopping http server...`);
                 await context._restServer.stop();
-                // console.log('System: http server stopped');
-                context._log.info(`System: http server stopped`);
+                console.log('System: http server stopped');
+                // context._log.info(`System: http server stopped`);
             }
 
             if(process.env.MESSAGE_BUS !== 'false') {
@@ -343,8 +343,8 @@ export default class System
             }
         }
         catch (ex) {
-            // console.log('System error: ', ex);
-            context._log.info(`System error: ${JSON.stringify(ex)}`);
+            console.log('System error: ', ex);
+            // context._log.info(`System error: ${JSON.stringify(ex)}`);
             return;
         }
     }
