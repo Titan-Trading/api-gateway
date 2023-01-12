@@ -120,7 +120,7 @@ export default class System
                             const updated = context._services.update(service.id, service.name, service.supportedCommunicationChannels, service.hostname, service.port, service.endpoints, service.commands, service.instances);
                             if(updated && service.name != process.env.SERVICE_ID) {
                                 // console.log('System: service updated ' + service.name + ' (' + service.instances.length + ' instances)');
-                                context._log.info(`System: service updated ${service.name} (${service.instances.length}} instances)`);
+                                context._log.info(`System: service updated ${service.name} (${service.instances.length} instances)`);
 
                                 if(!service.supportedCommunicationChannels || !service.supportedCommunicationChannels.includes('bus')) {
                                     return;
@@ -150,14 +150,14 @@ export default class System
                         // check for a mapping in mapping repository
                         const service = context._services.getByRequest(method, url);
                         if(!service) {
-                            // console.log('service not found');
-                            context._log.info(`System: request to service that's not found (route id ${routeId})`);
+                            console.log(`System: request to service that's not found (route id ${routeId})`);
+                            // context._log.info(`System: request to service that's not found (route id ${routeId})`);
 
                             return next();
                         }
 
-                        // console.log('System: service found ', service.name);
-                        context._log.info(`System: service found ${service.name}`);
+                        console.log('System: service found ', service.name);
+                        // context._log.info(`System: service found ${service.name}`);
 
                         // check if request should be authenticated based on mapping schema
                         // authenticate request using given pattern
@@ -214,8 +214,8 @@ export default class System
                             });
 
                             if(pendingRequestAdded) {
-                                // console.log('System: sending request to ' + requestUrl);
-                                context._log.info(`System: sending request to ${requestUrl}`);
+                                console.log('System: sending request to ' + requestUrl);
+                                // context._log.info(`System: sending request to ${requestUrl}`);
 
                                 //TODO: on main request timeout, cancel proxied request
                                 context._restProxy.sendRequest(method, requestUrl, requestBody, requestHeaders).then((proxiedRes) => {
@@ -240,8 +240,8 @@ export default class System
 
                                     return res.status(proxiedRes.statusCode).json(proxiedRes.body); 
                                 }).catch((err) => {
-                                    // console.log(err);
-                                    context._log.info(`System: unabled to send proxied request error: ${JSON.stringify(err)}`);
+                                    console.log(err);
+                                    // context._log.info(`System: unabled to send proxied request error: ${JSON.stringify(err)}`);
 
                                     return;
                                 });  
@@ -249,8 +249,8 @@ export default class System
                         }
                     }
                     catch(e) {
-                        // console.log(e);
-                        context._log.info(`System: request processing error: ${JSON.stringify(e)}`);
+                        console.log(e);
+                        // context._log.info(`System: request processing error: ${JSON.stringify(e)}`);
 
                         return res.status(500).json({
                             message: 'Unknown server error'
