@@ -5,6 +5,7 @@ import PendingRequestRepository from './repositories/PendingRequestRepository';
 import ServiceRepository from './repositories/ServiceRepository';
 import RestProxy from './utilities/RestProxy';
 import { pluck, sleep } from './utilities/helpers';
+import Log from './utilities/Log';
 
 
 /**
@@ -13,6 +14,7 @@ import { pluck, sleep } from './utilities/helpers';
 
 export default class System
 {
+    private _log: Log;
     private _requestTimeoutLimit: number;
     private _messageBus: MessageBus;
     private _restServer: HttpServer;
@@ -30,6 +32,7 @@ export default class System
         this._restProxy = new RestProxy();
         this._pendingRequests = new PendingRequestRepository();
         this._services = new ServiceRepository();
+        this._log = new Log(this._messageBus);
     }
 
     /**
@@ -80,7 +83,8 @@ export default class System
                         // update route mapping repository
                         const updated = context._services.update(message.serviceId, message.serviceId, message.supportedCommunicationChannels, message.hostname, message.port, message.endpoints, message.commands, message.instances);
                         if(updated && message.serviceId != process.env.SERVICE_ID) {
-                            console.log('System: service online ' + message.serviceId + ' (instance ' + message.instanceId + ')');
+                            // console.log('System: service online ' + message.serviceId + ' (instance ' + message.instanceId + ')');
+                            context._log.info(`System: service online ${message.serviceId} (instance ${message.instanceId})`);
 
                             if(!message.supportedCommunicationChannels || !message.supportedCommunicationChannels.includes('bus')) {
                                 return;
@@ -95,7 +99,8 @@ export default class System
                         // update route mapping repository
                         const removed = context._services.remove(message.serviceId);
                         if(removed && message.serviceId != process.env.SERVICE_ID) {
-                            console.log('System: service offline ' + message.serviceId + ' (instance ' + message.instanceId + ')');
+                            // console.log('System: service offline ' + message.serviceId + ' (instance ' + message.instanceId + ')');
+                            context._log.info(`System: service offline ${message.serviceId} (instance ${message.instanceId})`);
 
                             context._messageBus.unsubscribeFromTopic(message.serviceId);
                         }
@@ -106,14 +111,16 @@ export default class System
                             return;
                         }
 
-                        console.log('System: ' + message.response.length + ' services found');
+                        // console.log('System: ' + message.response.length + ' services found');
+                        context._log.info(`System: ${message.response.length} services found`);
                     
                         for(let sI in message.response) {
                             const service = message.response[sI];
                     
                             const updated = context._services.update(service.id, service.name, service.supportedCommunicationChannels, service.hostname, service.port, service.endpoints, service.commands, service.instances);
                             if(updated && service.name != process.env.SERVICE_ID) {
-                                console.log('System: service updated ' + service.name + ' (' + service.instances.length + ' instances)');
+                                // console.log('System: service updated ' + service.name + ' (' + service.instances.length + ' instances)');
+                                context._log.info(`System: service updated ${service.name} (${service.instances.length}} instances)`);
 
                                 if(!service.supportedCommunicationChannels || !service.supportedCommunicationChannels.includes('bus')) {
                                     return;
@@ -143,10 +150,14 @@ export default class System
                         // check for a mapping in mapping repository
                         const service = context._services.getByRequest(method, url);
                         if(!service) {
+                            // console.log('service not found');
+                            context._log.info(`System: request to service that's not found (route id ${routeId})`);
+
                             return next();
                         }
 
-                        console.log('System: service found ', service.name);
+                        // console.log('System: service found ', service.name);
+                        context._log.info(`System: service found ${service.name}`);
 
                         // check if request should be authenticated based on mapping schema
                         // authenticate request using given pattern
@@ -192,7 +203,7 @@ export default class System
                             const requestHeaders = pluck(['content-type', 'user-agent', 'x-auth-token', 'st-api-key', 'st-api-sign', 'st-api-timestamp'], req.headers);
                             const requestBody = req.body ? req.body : null;
 
-                            const requestUrl = 'http://' + service.hostname + ':' + service.port + url;
+                            const requestUrl = `http://${service.hostname}:${service.port}${url}`;
 
                             // add to pending requests repository
                             const pendingRequestAdded = context._pendingRequests.add(requestId, {
@@ -203,7 +214,8 @@ export default class System
                             });
 
                             if(pendingRequestAdded) {
-                                console.log('System: sending request to ' + requestUrl);
+                                // console.log('System: sending request to ' + requestUrl);
+                                context._log.info(`System: sending request to ${requestUrl}`);
 
                                 //TODO: on main request timeout, cancel proxied request
                                 context._restProxy.sendRequest(method, requestUrl, requestBody, requestHeaders).then((proxiedRes) => {
@@ -228,7 +240,8 @@ export default class System
 
                                     return res.status(proxiedRes.statusCode).json(proxiedRes.body); 
                                 }).catch((err) => {
-                                    console.log(err);
+                                    // console.log(err);
+                                    context._log.info(`System: unabled to send proxied request error: ${JSON.stringify(err)}`);
 
                                     return;
                                 });  
@@ -236,7 +249,8 @@ export default class System
                         }
                     }
                     catch(e) {
-                        console.log(e);
+                        // console.log(e);
+                        context._log.info(`System: request processing error: ${JSON.stringify(e)}`);
 
                         return res.status(500).json({
                             message: 'Unknown server error'
@@ -249,6 +263,8 @@ export default class System
                  */
                 if(process.env.MESSAGE_BUS !== 'false') {
                     console.log('System: connecting to message bus...');
+                    // context._log.info(`System: connecting to message bus`);
+
                     context._messageBus.connect();
                 }
 
@@ -256,23 +272,29 @@ export default class System
                  * Start http/rest server
                  */
                 if(process.env.REST_SERVER !== 'false') {
-                    console.log('System: starting http server');
+                    // console.log('System: starting http server');
+                    context._log.info(`System: starting http server`);
+
                     context._restServer.start(process.env.REST_PORT);
                 }
 
                 resolve(true);
             }
             catch(err) {
-                console.log('System error: ', err);
+                // console.log('System error: ', err);
+                context._log.info(`System error: ${JSON.stringify(err)}`)
                 
-                console.log('System: wait 10 seconds before reconnecting...');
+                // console.log('System: wait 10 seconds before reconnecting...');
+                context._log.info(`System: wait 10 seconds before reconnecting...`);
                 await sleep(10 * 1000);
 
-                console.log('System: reconnecting to message bus...');
+                // console.log('System: reconnecting to message bus...');
+                context._log.info(`System: reconnecting to message bus...`);
                 context._messageBus.disconnect();
                 context._messageBus.connect();
 
-                console.log('System: starting http server...');
+                // console.log('System: starting http server...');
+                context._log.info(`System: starting http server...`);
                 context._restServer.stop();
                 context._restServer.start(process.env.REST_PORT);
 
@@ -294,28 +316,35 @@ export default class System
         try {
             if(process.env.MESSAGE_BUS !== 'false') {
                 // let the service registry know that a micro-service is offline
-                console.log('System: updating service registry (SERVICE_OFFLINE)...');
+                // console.log('System: updating service registry (SERVICE_OFFLINE)...');
+                context._log.info(`System: updating service registry (SERVICE_OFFLINE)...`);
                 await context._messageBus.sendEvent('service-registry', 'SERVICE_OFFLINE', {
                     instanceId: process.env.INSTANCE_ID,
                     serviceId:  process.env.SERVICE_ID
                 });
-                console.log('System: service registry updated');
+                // console.log('System: service registry updated');
+                context._log.info(`System: service registry updated`);
             }
 
             if(process.env.MESSAGE_BUS !== 'false') {
-                console.log('System: stopping http server...');
+                // console.log('System: stopping http server...');
+                context._log.info(`System: stopping http server...`);
                 await context._restServer.stop();
-                console.log('System: http server stopped');
+                // console.log('System: http server stopped');
+                context._log.info(`System: http server stopped`);
             }
 
             if(process.env.MESSAGE_BUS !== 'false') {
                 console.log('System: disconnecting from message bus...');
+                // context._log.info(`System: disconnecting from message bus...`);
                 await context._messageBus.disconnect();
                 console.log('System: message bus disconnected');
+                // context._log.info(`System: message bus disconnected`);
             }
         }
         catch (ex) {
-            console.log('System error: ', ex);
+            // console.log('System error: ', ex);
+            context._log.info(`System error: ${JSON.stringify(ex)}`);
             return;
         }
     }
@@ -353,7 +382,8 @@ export default class System
         }
         catch(ex)
         {
-            console.log('System error: ', ex);
+            // console.log('System error: ', ex);
+            context._log.info(`System: messages from other services error: ${JSON.stringify(ex)}`);
             return;
         }
     }
