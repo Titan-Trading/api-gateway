@@ -83,8 +83,8 @@ export default class System
                         // update route mapping repository
                         const updated = context._services.update(message.serviceId, message.serviceId, message.supportedCommunicationChannels, message.hostname, message.port, message.endpoints, message.commands, message.instances);
                         if(updated && message.serviceId != process.env.SERVICE_ID) {
-                            // console.log('System: service online ' + message.serviceId + ' (instance ' + message.instanceId + ')');
-                            context._log.info(`System: service online ${message.serviceId} (instance ${message.instanceId})`);
+                            console.log('System: service online ' + message.serviceId + ' (instance ' + message.instanceId + ')');
+                            // context._log.info(`System: service online ${message.serviceId} (instance ${message.instanceId})`);
 
                             if(!message.supportedCommunicationChannels || !message.supportedCommunicationChannels.includes('bus')) {
                                 return;
@@ -99,8 +99,8 @@ export default class System
                         // update route mapping repository
                         const removed = context._services.remove(message.serviceId);
                         if(removed && message.serviceId != process.env.SERVICE_ID) {
-                            // console.log('System: service offline ' + message.serviceId + ' (instance ' + message.instanceId + ')');
-                            context._log.info(`System: service offline ${message.serviceId} (instance ${message.instanceId})`);
+                            console.log('System: service offline ' + message.serviceId + ' (instance ' + message.instanceId + ')');
+                            // context._log.info(`System: service offline ${message.serviceId} (instance ${message.instanceId})`);
 
                             context._messageBus.unsubscribeFromTopic(message.serviceId);
                         }
@@ -111,16 +111,16 @@ export default class System
                             return;
                         }
 
-                        // console.log('System: ' + message.response.length + ' services found');
-                        context._log.info(`System: ${message.response.length} services found`);
+                        console.log('System: ' + message.response.length + ' services found');
+                        // context._log.info(`System: ${message.response.length} services found`);
                     
                         for(let sI in message.response) {
                             const service = message.response[sI];
                     
                             const updated = context._services.update(service.id, service.name, service.supportedCommunicationChannels, service.hostname, service.port, service.endpoints, service.commands, service.instances);
                             if(updated && service.name != process.env.SERVICE_ID) {
-                                // console.log('System: service updated ' + service.name + ' (' + service.instances.length + ' instances)');
-                                context._log.info(`System: service updated ${service.name} (${service.instances.length} instances)`);
+                                console.log('System: service updated ' + service.name + ' (' + service.instances.length + ' instances)');
+                                // context._log.info(`System: service updated ${service.name} (${service.instances.length} instances)`);
 
                                 if(!service.supportedCommunicationChannels || !service.supportedCommunicationChannels.includes('bus')) {
                                     return;
@@ -382,8 +382,8 @@ export default class System
         }
         catch(ex)
         {
-            // console.log('System error: ', ex);
-            context._log.info(`System: messages from other services error: ${JSON.stringify(ex)}`);
+            console.log('System error: ', ex);
+            // context._log.info(`System: messages from other services error: ${JSON.stringify(ex)}`);
             return;
         }
     }
