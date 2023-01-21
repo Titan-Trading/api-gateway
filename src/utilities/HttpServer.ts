@@ -24,6 +24,7 @@ export default class HttpServer
             origin: [
                 // production
                 'https://www.tradingsystemstest.com',
+                'https://tradingsystemstest.com',
 
                 // local docker
                 'https://www.tradingsystemstest.local',
