@@ -139,6 +139,7 @@ export default class System
                 context._restServer.onRequest(async ({req, res, next}) => {
                     try {
                         const method = req.method.toLowerCase();
+                        const originalUrl = req.originalUrl;
                         const url = req.path;
 
                         // string to identify a route
@@ -203,7 +204,7 @@ export default class System
                             const requestHeaders = pluck(['content-type', 'user-agent', 'x-auth-token', 'st-api-key', 'st-api-sign', 'st-api-timestamp'], req.headers);
                             const requestBody = req.body ? req.body : null;
 
-                            const requestUrl = `http://${service.hostname}:${service.port}${url}`;
+                            const requestUrl = `http://${service.hostname}:${service.port}${originalUrl}`;
 
                             // add to pending requests repository
                             const pendingRequestAdded = context._pendingRequests.add(requestId, {
